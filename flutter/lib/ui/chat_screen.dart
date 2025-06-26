@@ -1,4 +1,4 @@
-import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/conversation_provider.dart';
@@ -21,6 +21,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   late final ChatAgent _chatAgent;
   late final SupervisorAgent _supervisor;
   final _controller = TextEditingController();
+  final _renderer = RTCVideoRenderer();
   String _status = 'waiting';
 
   @override
@@ -29,12 +30,31 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _service = OpenAIWebRTCService();
     _supervisor = SupervisorAgent();
     _chatAgent = ChatAgent(_service, _supervisor);
+    _renderer.initialize();
     _initConnection();
+    _chatAgent.responses.listen((msg) {
+      ref.read(conversationProvider.notifier).addMessage(msg);
+    });
+  }
+
+  @override
+  void dispose() {
+    _renderer.dispose();
+    super.dispose();
   }
 
   Future<void> _initConnection() async {
     final offer = await _service.createOffer();
-    // would POST offer and apply answer here
+    final answer = await _service.sendOfferToOpenAI(offer);
+    await _service.applyAnswer(answer);
+    _service.dataChannel?.onMessage = (msg) {
+      _chatAgent.handleDataChannelMessage(msg.text);
+    };
+    _service.connection?.onTrack = (event) {
+      if (event.track.kind == 'audio') {
+        _renderer.srcObject = event.streams.first;
+      }
+    };
   }
 
   void _send() {
@@ -42,8 +62,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (text.isEmpty) return;
     ref.read(conversationProvider.notifier).addMessage(ChatMessage(sender: 'user', content: text));
     _controller.clear();
-    final payload = jsonEncode({'user_message': text});
-    _service.dataChannel?.send(RTCDataChannelMessage(payload));
+    _chatAgent.sendUserText(text);
   }
 
   @override

@@ -17,7 +17,7 @@ class OpenAIWebRTCService {
     return _pc!;
   }
 
-  Future<OfferResponse> createOffer() async {
+  Future<RTCSessionDescription> createOffer() async {
     final pc = await _createConnection();
     _localStream = await navigator.mediaDevices.getUserMedia({'audio': true});
     for (var track in _localStream!.getTracks()) {
@@ -25,7 +25,10 @@ class OpenAIWebRTCService {
     }
     final offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
+    return offer;
+  }
 
+  Future<OfferResponse> sendOfferToOpenAI(RTCSessionDescription offer) async {
     final body = {
       'model': 'gpt-4o-mini-realtime',
       'webrtc_offer': offer.sdp,
@@ -40,11 +43,13 @@ class OpenAIWebRTCService {
       body: jsonEncode(body),
     );
     final data = jsonDecode(resp.body);
-    final ice = (data['ice_servers'] as List).map((e) => IceServer(
-          url: e['urls'][0],
-          username: e['username'],
-          credential: e['credential'],
-        ));
+    final ice = (data['ice_servers'] as List).map(
+      (e) => IceServer(
+        url: e['urls'][0],
+        username: e['username'],
+        credential: e['credential'],
+      ),
+    );
     return OfferResponse(sdp: data['answer'], iceServers: ice.toList());
   }
 
