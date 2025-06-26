@@ -1,0 +1,21 @@
+name: chat_supervisor_app
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: '>=0.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^2.5.0
+  flutter_webrtc: 0.12.12+hotfix.1
+  http: ^1.2.1
+  dart_openai: ^5.0.0
+  flutter_dotenv: ^5.1.0
+  uuid: ^4.3.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
