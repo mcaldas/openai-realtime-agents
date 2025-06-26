@@ -1,0 +1,11 @@
+run:
+	cd flutter && [ -d macos ] || fvm flutter create .
+	cd flutter && fvm flutter run -d macos
+
+build-macos:
+	cd flutter && bash -c 'if [[ "$$OSTYPE" == "darwin"* ]]; then \
+	[ -d macos ] || fvm flutter create .; \
+	fvm flutter pub get && fvm flutter build macos --release; \
+	else \
+	echo "Skipping macOS build on non-macOS host."; \
+	fi'

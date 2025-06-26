@@ -31,7 +31,6 @@ yarn-error.log*
 # Ignore all env files except .env.sample
 .env
 
-
 # vercel
 .vercel
 
@@ -39,3 +38,12 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 todo.md
+
+# FVM Version Cache
+.fvm/
+
+# Flutter tool files
+flutter/.metadata
+flutter/macos/**/Flutter/ephemeral/
+flutter/macos/
+flutter/pubspec.lock
